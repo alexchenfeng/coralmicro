@@ -65,6 +65,8 @@ toolchain_dir = ''
 exe_extension = ''
 skip_hid_readback = False
 system_name = platform.system()
+processor_arch = platform.processor()
+
 if system_name == 'Windows':
   platform_dir = 'win'
   toolchain_dir = 'toolchain-win'
@@ -74,9 +76,12 @@ elif system_name == 'Darwin':
   platform_dir = 'mac'
   toolchain_dir = 'toolchain-mac'
   skip_hid_readback = True
-elif system_name == 'Linux':
+elif system_name == 'Linux' and processor_arch == "x86_64":
   platform_dir = 'linux/amd64'
   toolchain_dir = 'toolchain-linux'
+elif system_name == 'Linux' and processor_arch == "aarch64":
+  platform_dir = 'linux/aarch64'
+  toolchain_dir = 'toolchain-aarch64-linux'
 else:
   print('Unknown operating system!' + system_name)
   raise OSError
