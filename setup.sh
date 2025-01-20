@@ -61,5 +61,7 @@ else
   exit 1
 fi
 
+mkdir -pv third_party/nxp/elftosb/linux/aarch64
+cp -v bin/elftosb-arm64 third_party/nxp/elftosb/linux/aarch64/elftosb
 python3 -m pip install pip --upgrade
 python3 -m pip install -r "${SCRIPT_DIR}/scripts/requirements.txt"
