@@ -102,7 +102,7 @@ extern "C" int real_main(int argc, char** argv, bool init_console_tx,
   coralmicro::PmicTask::GetSingleton()->Init(&g_i2c5_handle);
   coralmicro::CameraTask::GetSingleton()->Init(&g_i2c5_handle);
 
-  CHECK(xTaskCreate(app_main, "app_main", configMINIMAL_STACK_SIZE * 30,
+  CHECK(xTaskCreate(app_main, "app_main", configMINIMAL_STACK_SIZE * 40,
                     nullptr, coralmicro::kAppTaskPriority, nullptr) == pdPASS);
 
   // Allows the AHB clock to run while the core is asleep,
