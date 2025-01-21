@@ -37,6 +37,8 @@ exe_extension = ''
 pyinstaller_separator = ':'
 platform_name = ''
 system_name = platform.system()
+processor_arch = platform.processor()
+
 if system_name == 'Windows':
   platform_dir = 'win'
   toolchain_dir = 'toolchain-win'
@@ -47,10 +49,15 @@ elif system_name == 'Darwin':
   platform_dir = 'mac'
   toolchain_dir = 'toolchain-mac'
   platform_name = 'osx'
-else:
+elif system_name == 'Linux' and processor_arch == "aarch64":
+  platform_dir = 'linux/aarch64'
+  toolchain_dir = 'toolchain-aarch64-linux'
+elif system_name == 'Linux' and processor_arch == "x86_64":
   platform_dir = 'linux/amd64'
   toolchain_dir = 'toolchain-linux'
   platform_name = 'linux64'
+else:
+  raise RuntimeError('Unsupported platform!')
 
 
 def file_sha256(filename):
