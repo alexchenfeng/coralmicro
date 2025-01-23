@@ -14,7 +14,7 @@ extern "C"
 
     bool coralmicro_ros_transport_close(struct uxrCustomTransport *transport);
 
-    size_t coralmicro_ros_transport_write(struct uxrCustomTransport *transport, uint8_t *buf, size_t len, uint8_t *errcode);
+    size_t coralmicro_ros_transport_write(struct uxrCustomTransport *transport, const uint8_t *buf, size_t len, uint8_t *errcode);
 
     size_t coralmicro_ros_transport_read(struct uxrCustomTransport *transport, uint8_t *buf, size_t len, int timeout, uint8_t *errcode);
 

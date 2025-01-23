@@ -31,12 +31,15 @@
 
 extern "C" void app_main(void *param) {
   (void)param;
-  rmw_uros_set_custom_transport(true,
+  rmw_ret_t rmw_ret = rmw_uros_set_custom_transport(true,
                                 NULL, 
                                 coralmicro_ros_transport_open, 
                                 coralmicro_ros_transport_close, 
-                                reinterpret_cast<write_custom_func>(coralmicro_ros_transport_write), 
+                                coralmicro_ros_transport_write, 
                                 coralmicro_ros_transport_read);
+  if (rmw_ret != RMW_RET_OK) {
+    printf("Error on set custom transport (line %d)\r\n", __LINE__);
+  }
   
   rcl_allocator_t freeRTOS_allocator = rcutils_get_zero_initialized_allocator();
   
@@ -59,15 +62,10 @@ extern "C" void app_main(void *param) {
   rcl_node_t node;
   rcl_ret_t temp_rc;
 
-  vTaskDelay(pdMS_TO_TICKS(5000));
   allocator = rcl_get_default_allocator();
-  printf("allocator.allocate: %d\r\n", allocator.allocate);
-
-  rcl_init_options_t init_options = rcl_get_zero_initialized_init_options();
-  rcl_init_options_init(&init_options, allocator);
 
   // create init option
-  temp_rc = rclc_support_init_with_options(&support, 0, NULL, &init_options, &allocator);
+  temp_rc = rclc_support_init(&support, 0, NULL, &allocator);
   if (temp_rc != RCL_RET_OK) {
     printf("Error on support init (line %d)\r\n", __LINE__);
     printf("Error: %d\r\n", temp_rc);
