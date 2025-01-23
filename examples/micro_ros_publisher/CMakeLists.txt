@@ -14,6 +14,7 @@
 
 add_executable_m7(micro_ros_publisher
     micro_ros_publisher.cc
+    ../../libs/micro_ros/microros_time.c
 )
 
 target_link_directories(micro_ros_publisher PUBLIC ../../libs/micro_ros/micro_ros_static_lib)

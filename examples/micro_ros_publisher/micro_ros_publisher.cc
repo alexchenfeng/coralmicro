@@ -46,31 +46,57 @@ extern "C" void app_main(void *param) {
   freeRTOS_allocator.zero_allocate = microros_zero_allocate;
 
   if (!rcutils_set_default_allocator(&freeRTOS_allocator)) {
-    printf("Error on default allocator (line %d)\n", __LINE__);
+    printf("Error on default allocator (line %d)\r\n", __LINE__);
+  } else {
+    printf("Default allocator set\r\n");
   }
 
+  // micro ros app
   rcl_publisher_t publisher;
   std_msgs__msg__Int32 msg;
   rclc_support_t support;
   rcl_allocator_t allocator;
   rcl_node_t node;
+  rcl_ret_t temp_rc;
 
+  vTaskDelay(pdMS_TO_TICKS(5000));
   allocator = rcl_get_default_allocator();
+  printf("allocator.allocate: %d\r\n", allocator.allocate);
 
-  rclc_node_init_default(&node, "coral_micro_node", "", &support);
+  rcl_init_options_t init_options = rcl_get_zero_initialized_init_options();
+  rcl_init_options_init(&init_options, allocator);
 
-  rclc_publisher_init_default(&publisher, 
+  // create init option
+  temp_rc = rclc_support_init_with_options(&support, 0, NULL, &init_options, &allocator);
+  if (temp_rc != RCL_RET_OK) {
+    printf("Error on support init (line %d)\r\n", __LINE__);
+    printf("Error: %d\r\n", temp_rc);
+  }
+
+  // create node
+  temp_rc = rclc_node_init_default(&node, "coral_micro_node", "", &support);
+  if (temp_rc != RCL_RET_OK) {
+    printf("Error on node init (line %d)\r\n", __LINE__);
+  }
+
+  // create publisher
+  temp_rc = rclc_publisher_init_default(&publisher, 
                               &node, 
-                              ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Int32), 
+                              ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Int32),
                               "micro_ros_publisher");
-  msg.data = 0;
+  if (temp_rc != RCL_RET_OK) {
+    printf("Error on publisher init (line %d)\r\n", __LINE__);
+  }
 
+  msg.data = 0;
+  coralmicro::LedSet(coralmicro::Led::kStatus, true);
   for(;;){
+    coralmicro::LedSet(coralmicro::Led::kUser, true);
     rcl_ret_t ret = rcl_publish(&publisher, &msg, NULL);
     if (ret != RCL_RET_OK) {
-      printf("Error publishing message (line %d)\n", __LINE__);
+      printf("Error publishing message (line %d)\r\n", __LINE__);
     }
     msg.data++;
-    vTaskDelay(1000 / portTICK_PERIOD_MS);
+    vTaskDelay(pdMS_TO_TICKS(1000));
   }
 }
