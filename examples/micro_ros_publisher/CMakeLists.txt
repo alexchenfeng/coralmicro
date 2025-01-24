@@ -17,15 +17,15 @@ add_executable_m7(micro_ros_publisher
     ../../libs/micro_ros/microros_time.c
 )
 
-target_link_directories(micro_ros_publisher PUBLIC ../../libs/micro_ros/micro_ros_static_lib)
+target_link_directories(micro_ros_publisher PUBLIC ../../libs/micro_ros/microros_static_library/libmicroros)
 
 target_include_directories(micro_ros_publisher PUBLIC
-    ../../libs/micro_ros/microros_include
+    ../../libs/micro_ros/microros_static_library/libmicroros/microros_include
 )
 
 target_link_libraries(micro_ros_publisher
     libs_base-m7_freertos
     libs_micro_ros_freertos
     libs_base-m7_wifi
-    libmicroros.a
+    libmicroros_coral_cortex_m7.a
 )

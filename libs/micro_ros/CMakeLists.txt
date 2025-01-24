@@ -17,7 +17,7 @@ set(libs_FreeRTOS_INCLUDE_DIRECTORIES_PUBLIC
 )
 
 set(libs_micro_ros_INCLUDE_DIRECTORIES_PUBLIC
-    ./microros_include
+    ./microros_static_library/libmicroros/microros_include
 )
 
 add_library_m7(libs_micro_ros_freertos STATIC

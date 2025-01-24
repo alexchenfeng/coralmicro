@@ -1,2 +1,1 @@
-microros_include
-micro_ros_static_lib
+microros_static_library/libmicroros
