@@ -8,20 +8,22 @@ set(libs_micro_ros_SOURCES
     udp_transport.c
 )
 
-set(libs_FreeRTOS_INCLUDE_DIRECTORIES_PUBLIC
-    .
-    ${PROJECT_SOURCE_DIR}/third_party/modified/FreeRTOS
-    ${PROJECT_SOURCE_DIR}/third_party/modified/nxp/rt1176-sdk/rtos/freertos/freertos_kernel/include
-    ${PROJECT_SOURCE_DIR}/third_party/freertos_kernel/include
-    ${PROJECT_SOURCE_DIR}/third_party/freertos_kernel/portable/GCC/ARM_CM4F
-)
-
 set(libs_micro_ros_INCLUDE_DIRECTORIES_PUBLIC
     ./microros_static_library/libmicroros/microros_include
 )
 
+if (USE_DEBUG)
+    target_compile_definitions(libs_micro_ros_freertos PRIVATE
+        USE_DEBUG
+    )
+endif()
+
 add_library_m7(libs_micro_ros_freertos STATIC
     ${libs_micro_ros_SOURCES}
+)
+
+target_include_directories(libs_micro_ros_freertos PRIVATE
+    ${libs_micro_ros_INCLUDE_DIRECTORIES_PUBLIC}
 )
 
 target_link_libraries(libs_micro_ros_freertos
@@ -29,10 +31,3 @@ target_link_libraries(libs_micro_ros_freertos
     libs_base-m7_wifi
 )
 
-target_include_directories(libs_micro_ros_freertos PUBLIC
-    ${libs_FreeRTOS_INCLUDE_DIRECTORIES_PUBLIC}
-)
-
-target_include_directories(libs_micro_ros_freertos PUBLIC
-    ${libs_micro_ros_INCLUDE_DIRECTORIES_PUBLIC}
-)

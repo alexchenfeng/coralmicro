@@ -57,3 +57,5 @@ else()
 endif()
 
 add_subdirectory(libs)
+
+option(USE_DEBUG "Debug model" OFF)

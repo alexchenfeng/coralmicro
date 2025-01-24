@@ -28,7 +28,10 @@ bool coralmicro_ros_udp_transport_open(struct uxrCustomTransport * transport){
         return false;
     }
 
+    #ifdef USE_DEBUG
     printf("Coral Micro ROS UDP Transport Open! Attempting to use UDP...\r\n");
+    #endif
+    
     return true;
 }
 
@@ -46,7 +49,9 @@ size_t coralmicro_ros_udp_transport_write(struct uxrCustomTransport* transport, 
     {
         return 0;
     }
+    #ifdef USE_DEBUG
     printf("Coral Micro ROS UDP Transport Write! Attempting to write UDP...\r\n");
+    #endif
     const char * ip_addr = (const char*) transport->args;
     struct sockaddr_in addr;
     addr.sin_family = AF_INET;
@@ -55,13 +60,17 @@ size_t coralmicro_ros_udp_transport_write(struct uxrCustomTransport* transport, 
     int ret = 0;
     ret = sendto(sock_fd, buf, len, 0, (struct sockaddr *)&addr, sizeof(addr));
     size_t writed = ret>0? ret:0;
+    #ifdef USE_DEBUG
     printf("Wrote %d bytes\r\n", writed);
+    #endif
     return writed;
 }
 
 size_t coralmicro_ros_udp_transport_read(struct uxrCustomTransport* transport, uint8_t* buf, size_t len, int timeout, uint8_t* err){
 
-    printf("Coral Micro ROS UDP Transport Read! Attempting to read UDP...\r\n");
+    #ifdef USE_DEBUG
+        printf("Coral Micro ROS UDP Transport Read! Attempting to read UDP...\r\n");
+    #endif
     int ret = 0;
     //set timeout
     struct timeval tv_out;
@@ -70,6 +79,8 @@ size_t coralmicro_ros_udp_transport_read(struct uxrCustomTransport* transport, u
     setsockopt(sock_fd, SOL_SOCKET, SO_RCVTIMEO,&tv_out, sizeof(tv_out));
     ret = recv(sock_fd, buf, len, MSG_WAITALL);
     size_t readed = ret > 0 ? ret : 0;
+    #ifdef USE_DEBUG
     printf("Read %d bytes\r\n", readed);
+    #endif
     return readed;
 }
