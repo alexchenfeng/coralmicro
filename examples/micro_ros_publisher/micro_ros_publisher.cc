@@ -31,12 +31,15 @@
 
 extern "C" void app_main(void *param) {
   (void)param;
-  rmw_ret_t rmw_ret = rmw_uros_set_custom_transport(true,
-                                NULL, 
-                                coralmicro_ros_transport_open, 
-                                coralmicro_ros_transport_close, 
-                                coralmicro_ros_transport_write, 
-                                coralmicro_ros_transport_read);
+
+  coralmicro_ros_wifi_connect();
+
+  rmw_ret_t rmw_ret = rmw_uros_set_custom_transport(false,
+                                (void*)"192.168.1.232",
+                                coralmicro_ros_udp_transport_open, 
+                                coralmicro_ros_udp_transport_close, 
+                                coralmicro_ros_udp_transport_write, 
+                                coralmicro_ros_udp_transport_read);
   if (rmw_ret != RMW_RET_OK) {
     printf("Error on set custom transport (line %d)\r\n", __LINE__);
   }

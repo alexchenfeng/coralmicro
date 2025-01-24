@@ -3,6 +3,9 @@ set(libs_micro_ros_SOURCES
     custom_memory_manager.c
     microros_allocators.c
     microros_time.c
+    wifi_client.cc
+    tcp_transport.cc
+    udp_transport.c
 )
 
 set(libs_FreeRTOS_INCLUDE_DIRECTORIES_PUBLIC
@@ -23,6 +26,7 @@ add_library_m7(libs_micro_ros_freertos STATIC
 
 target_link_libraries(libs_micro_ros_freertos
     libs_base-m7_freertos
+    libs_base-m7_wifi
 )
 
 target_include_directories(libs_micro_ros_freertos PUBLIC

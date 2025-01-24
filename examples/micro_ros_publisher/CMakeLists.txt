@@ -26,5 +26,6 @@ target_include_directories(micro_ros_publisher PUBLIC
 target_link_libraries(micro_ros_publisher
     libs_base-m7_freertos
     libs_micro_ros_freertos
+    libs_base-m7_wifi
     libmicroros.a
 )
