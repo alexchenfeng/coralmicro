@@ -13,7 +13,7 @@
 #include "third_party/nxp/rt1176-sdk/middleware/lwip/src/include/lwip/sockets.h"
 
 // --- micro-ROS Transports ---
-#define UDP_PORT        8888
+#define UDP_PORT        30755
 static int sock_fd = -1;
 
 bool coralmicro_ros_udp_transport_open(struct uxrCustomTransport * transport){
