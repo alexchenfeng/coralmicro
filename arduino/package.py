@@ -51,7 +51,8 @@ elif system_name == 'Darwin':
   platform_name = 'osx'
 elif system_name == 'Linux' and processor_arch == "aarch64":
   platform_dir = 'linux/aarch64'
-  toolchain_dir = 'toolchain-aarch64-linux'
+  toolchain_dir = 'toolchain-linux'
+  platform_name = 'linuxarm64'
 elif system_name == 'Linux' and processor_arch == "x86_64":
   platform_dir = 'linux/amd64'
   toolchain_dir = 'toolchain-linux'

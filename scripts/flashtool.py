@@ -81,7 +81,7 @@ elif system_name == 'Linux' and processor_arch == "x86_64":
   toolchain_dir = 'toolchain-linux'
 elif system_name == 'Linux' and processor_arch == "aarch64":
   platform_dir = 'linux/aarch64'
-  toolchain_dir = 'toolchain-aarch64-linux'
+  toolchain_dir = 'toolchain-linux'
 else:
   print('Unknown operating system!' + system_name)
   raise OSError
