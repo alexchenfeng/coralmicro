@@ -416,6 +416,25 @@ def core_main(args, **kwargs):
                     os.path.join(core_out_dir, 'LICENSE'))
     shutil.copyfile(os.path.join(arduino_dir, 'THIRD_PARTY_NOTICES.txt'),
                     os.path.join(core_out_dir, 'THIRD_PARTY_NOTICES.txt'))
+
+    # Clean include files
+    core_inc_dir = os.path.join(core_out_dir, 'cores', 'arduino', 'include')
+    for root, dirs, files in os.walk(core_inc_dir):
+      for file in files:
+        if file.endswith('.c'):
+          file_path = os.path.join(root, file)
+          try:
+            os.remove(file_path)
+            print(f'removed {file_path}')
+          except OSError:
+            pass
+        if file.endswith('.cc'):
+          file_path = os.path.join(root, file)
+          try:
+            os.remove(file_path)
+            print(f'removed {file_path}')
+          except OSError:
+            pass
     # Archive core.
     tar_path = os.path.join(args.output_dir, f'{core_name}.tar.bz2')
     with tarfile.open(name=tar_path, mode='w:bz2') as tar:
