@@ -138,7 +138,8 @@ def main():
   parser.add_argument('--core_url', type=str, default=None)
   parser.add_argument('--win_flashtool_url', type=str, default=None)
   parser.add_argument('--mac_flashtool_url', type=str, default=None)
-  parser.add_argument('--linux_flashtool_url', type=str, default=None)
+  parser.add_argument('--linux_aarch64_flashtool_url', type=str, default=None)
+  parser.add_argument('--linux_amd64_flashtool_url', type=str, default=None)
   parser.add_argument('--manifest_revision', type=str, default=None)
   args = parser.parse_args()
 
@@ -201,14 +202,25 @@ def manifest_main(args, **kwargs):
   core_url = args.core_url
   win_flashtool_url = args.win_flashtool_url
   mac_flashtool_url = args.mac_flashtool_url
-  linux_flashtool_url = args.linux_flashtool_url
+  linux_aarch64_flashtool_url = args.linux_aarch64_flashtool_url
+  linux_amd64_flashtool_url = args.linux_amd64_flashtool_url
 
   systems_json = []
-  if linux_flashtool_url:
-    sha256sum, size = GetDownloadMetadata(linux_flashtool_url)
+
+  if linux_aarch64_flashtool_url:
+    sha256sum, size = GetDownloadMetadata(linux_aarch64_flashtool_url)
+    systems_json.append({
+        'host': 'aarch64-linux-gnu',
+        'url': linux_aarch64_flashtool_url,
+        'archiveFileName': 'coral-flashtool-linuxarm64.tar.bz2',
+        'checksum': 'SHA-256:%s' % sha256sum,
+        'size': str(size)
+    })
+  if linux_amd64_flashtool_url:
+    sha256sum, size = GetDownloadMetadata(linux_amd64_flashtool_url)
     systems_json.append({
         'host': 'x86_64-pc-linux-gnu',
-        'url': linux_flashtool_url,
+        'url': linux_amd64_flashtool_url,
         'archiveFileName': 'coral-flashtool-linux64.tar.bz2',
         'checksum': 'SHA-256:%s' % sha256sum,
         'size': str(size)
@@ -302,6 +314,13 @@ def manifest_main(args, **kwargs):
                               'archiveFileName': 'gcc-arm-none-eabi-9-2020-q2-update-win32-arduino1.zip',
                               'checksum': 'SHA-256:daa13799151d05adb5c37016010e5ff649941aab4dac150a3ad649749cde4896',
                               'size': '182850168'
+                          },
+                          {
+                              'host': 'aarch64-linux-gnu',
+                              'url': 'https://developer.arm.com/-/media/Files/downloads/gnu-rm/9-2020q2/gcc-arm-none-eabi-9-2020-q2-update-aarch64-linux.tar.bz2',
+                              'archiveFileName': "gcc-arm-none-eabi-9-2020-q2-update-aarch64-linux.tar.bz2",
+                              'checksum': 'SHA-256:1f4165c25e2cff80e29870f409862487ba470afd436e245ba3c743108e17b8ac',
+                              'size': '152221158'
                           }
                       ]
                   },

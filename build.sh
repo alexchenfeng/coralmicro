@@ -126,8 +126,9 @@ Usage: docker_build.sh [-b <build_dir>]
   -a               build arduino library archive
   -s               build all arduino sketches
   -c               skip building CMake world
-  -o               skip building arduino core
   -n               build using ninja
+  -i               skip installing arduino
+  -g               skip building arduino core
 EOF
 )
     local build_dir="${SCRIPT_DIR}/build"
