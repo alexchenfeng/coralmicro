@@ -18,6 +18,11 @@ them to your board with the included flashtool (`scripts/flashtool.py`).
 ![arduino](https://github.com/google-coral/coralmicro/actions/workflows/arduino.yml/badge.svg?event=push)
 
 
+## New Features
+
+- [ ] micro ros jazzy support
+- [x] compatible with latest arduino cli
+
 ## Documentation
 
 + [Get Started with the Dev Board Micro](https://coral.ai/docs/dev-board-micro/get-started/)
