@@ -22,6 +22,7 @@ them to your board with the included flashtool (`scripts/flashtool.py`).
 
 - [ ] micro ros jazzy support
 - [x] compatible with latest arduino cli
+- [x] support for aarch64 platform (raspberry pi, nv jetson boards, etc...)
 
 ## Documentation
 
