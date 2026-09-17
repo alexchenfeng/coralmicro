@@ -67,6 +67,9 @@ skip_hid_readback = False
 system_name = platform.system()
 processor_arch = platform.processor()
 
+if not processor_arch:
+  processor_arch = platform.machine()
+
 if system_name == 'Windows':
   platform_dir = 'win'
   toolchain_dir = 'toolchain-win'
@@ -83,7 +86,7 @@ elif system_name == 'Linux' and processor_arch == "aarch64":
   platform_dir = 'linux/aarch64'
   toolchain_dir = 'toolchain-linux'
 else:
-  print('Unknown operating system!' + system_name)
+  print('Unknown operating system!' + system_name + ":" + processor_arch)
   raise OSError
 
 SDP_VID = 0x1fc9
