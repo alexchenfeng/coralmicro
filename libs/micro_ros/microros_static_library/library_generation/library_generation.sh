@@ -2,15 +2,22 @@
 set -e
 
 # for coral micro project set the base path to "libs/micro_ros/microros_static_library" folder
-
-export BASE_PATH=/project/$MICROROS_LIBRARY_FOLDER
+#
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
+BASE_PATH="$SCRIPT_DIR/../"
+echo "BASE_PATH: $BASE_PATH"
 
 ######## Init ########
 apt update
 
+if [ ! -d /uros_ws ]; then
+    echo "Cannot find /uros_ws folder. Please install micro_ros_setup first."
+    exit 1
+fi
+
 cd /uros_ws
 
-source /opt/ros/$ROS_DISTRO/setup.bash
+source /opt/ros/${ROS_DISTRO}/setup.bash
 source install/local_setup.bash
 
 ros2 run micro_ros_setup create_firmware_ws.sh generate_lib
@@ -21,7 +28,7 @@ pushd firmware/mcu_ws > /dev/null
     # Workaround: Copy just tf2_msgs
     if [ ! -e ros2/tf2_msgs/CMakeLists.txt ]; then
         echo "Cloning tf2_msgs"
-        git clone -b jazzy https://github.com/ros2/geometry2
+        git clone -b ${ROS_DISTRO} https://github.com/ros2/geometry2
         cp -R geometry2/tf2_msgs ros2/tf2_msgs
         rm -rf geometry2
     else
@@ -44,7 +51,7 @@ pushd firmware/mcu_ws > /dev/null
 
 popd > /dev/null
 
-export TOOLCHAIN_PREFIX=/uros_ws/gcc-arm-none-eabi-9-2020-q2-update/bin/arm-none-eabi-
+export TOOLCHAIN_PREFIX="${BASE_PATH}/../../../third_party/toolchain/gcc-arm-none-eabi/bin/arm-none-eabi-"
 
 rm -rf $BASE_PATH/libmicroros
 mkdir -p $BASE_PATH/libmicroros/microros_include
@@ -93,3 +100,4 @@ cd firmware
 echo "" > $BASE_PATH/libmicroros/built_packages
 for f in $(find $(pwd) -name .git -type d); do pushd $f > /dev/null; echo $(git config --get remote.origin.url) $(git rev-parse HEAD) >> $BASE_PATH/libmicroros/built_packages; popd > /dev/null; done;
 echo "coral micro uros static library generated successfully"
+touch $BASE_PATH/libmicroros/ROS_DISTRO && echo "${ROS_DISTRO}" > $BASE_PATH/libmicroros/ROS_DISTRO

@@ -35,7 +35,7 @@ extern "C" void app_main(void *param) {
   coralmicro_ros_wifi_connect();
 
   rmw_ret_t rmw_ret = rmw_uros_set_custom_transport(false,
-                                (void*)"192.168.1.232",
+                                (void*)"192.168.1.159",
                                 coralmicro_ros_udp_transport_open, 
                                 coralmicro_ros_udp_transport_close, 
                                 coralmicro_ros_udp_transport_write, 
@@ -90,14 +90,16 @@ extern "C" void app_main(void *param) {
   }
 
   msg.data = 0;
+  bool on = true;
   coralmicro::LedSet(coralmicro::Led::kStatus, true);
   for(;;){
-    coralmicro::LedSet(coralmicro::Led::kUser, true);
+    coralmicro::LedSet(coralmicro::Led::kUser, on);
     rcl_ret_t ret = rcl_publish(&publisher, &msg, NULL);
     if (ret != RCL_RET_OK) {
       printf("Error publishing message (line %d)\r\n", __LINE__);
     }
     msg.data++;
+    on = !on;
     vTaskDelay(pdMS_TO_TICKS(1000));
   }
 }

@@ -53,16 +53,29 @@ else() # Linux
     set(TOOLCHAIN_URL "https://developer.arm.com/-/media/Files/downloads/gnu-rm/9-2020q2/gcc-arm-none-eabi-9-2020-q2-update-x86_64-linux.tar.bz2")
 endif()
 
+set(TOOLCHAIN_SYMBOL_LINK_DIR ${CORAL_MICRO_SOURCE_DIR}/third_party/toolchain/gcc-arm-none-eabi)
+
 if (NOT EXISTS ${TOOLCHAIN_DIR})
     message(STATUS "Fetching ${TOOLCHAIN_URL}")
     file(DOWNLOAD ${TOOLCHAIN_URL} ${TOOLCHAIN_ARCHIVE})
     file(ARCHIVE_EXTRACT INPUT ${TOOLCHAIN_ARCHIVE} DESTINATION ${TOOLCHAIN_DIR}/${TOOLCHAIN_PREFIX})
 endif()
-get_filename_component(CMAKE_AR ${TOOLCHAIN_DIR}/gcc-arm-none-eabi-9-2020-q2-update/bin/arm-none-eabi-ar${TOOLCHAIN_EXE_EXTENSION} REALPATH CACHE)
-get_filename_component(CMAKE_C_COMPILER ${TOOLCHAIN_DIR}/gcc-arm-none-eabi-9-2020-q2-update/bin/arm-none-eabi-gcc${TOOLCHAIN_EXE_EXTENSION} REALPATH CACHE)
-get_filename_component(CMAKE_CXX_COMPILER ${TOOLCHAIN_DIR}/gcc-arm-none-eabi-9-2020-q2-update/bin/arm-none-eabi-g++${TOOLCHAIN_EXE_EXTENSION} REALPATH CACHE)
-get_filename_component(CMAKE_OBJCOPY ${TOOLCHAIN_DIR}/gcc-arm-none-eabi-9-2020-q2-update/bin/arm-none-eabi-objcopy${TOOLCHAIN_EXE_EXTENSION} REALPATH CACHE)
-get_filename_component(CMAKE_STRIP ${TOOLCHAIN_DIR}/gcc-arm-none-eabi-9-2020-q2-update/bin/arm-none-eabi-strip${TOOLCHAIN_EXE_EXTENSION} REALPATH CACHE)
+
+if (NOT EXISTS ${TOOLCHAIN_SYMBOL_LINK_DIR})
+    file(MAKE_DIRECTORY ${CORAL_MICRO_SOURCE_DIR}/third_party/toolchain)
+    file(CREATE_LINK 
+        ${CORAL_MICRO_SOURCE_DIR}/third_party/toolchain-linux/gcc-arm-none-eabi-9-2020-q2-update
+        ${TOOLCHAIN_SYMBOL_LINK_DIR}
+        SYMBOLIC 
+        RESULT result
+    )
+endif()
+
+get_filename_component(CMAKE_AR ${TOOLCHAIN_SYMBOL_LINK_DIR}/bin/arm-none-eabi-ar${TOOLCHAIN_EXE_EXTENSION} REALPATH CACHE)
+get_filename_component(CMAKE_C_COMPILER ${TOOLCHAIN_SYMBOL_LINK_DIR}/bin/arm-none-eabi-gcc${TOOLCHAIN_EXE_EXTENSION} REALPATH CACHE)
+get_filename_component(CMAKE_CXX_COMPILER ${TOOLCHAIN_SYMBOL_LINK_DIR}/bin/arm-none-eabi-g++${TOOLCHAIN_EXE_EXTENSION} REALPATH CACHE)
+get_filename_component(CMAKE_OBJCOPY ${TOOLCHAIN_SYMBOL_LINK_DIR}/bin/arm-none-eabi-objcopy${TOOLCHAIN_EXE_EXTENSION} REALPATH CACHE)
+get_filename_component(CMAKE_STRIP ${TOOLCHAIN_SYMBOL_LINK_DIR}/bin/arm-none-eabi-strip${TOOLCHAIN_EXE_EXTENSION} REALPATH CACHE)
 
 execute_process(
     COMMAND ${CMAKE_C_COMPILER} -print-libgcc-file-name
