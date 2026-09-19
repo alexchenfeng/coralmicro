@@ -10,12 +10,12 @@ echo "BASE_PATH: $BASE_PATH"
 ######## Init ########
 apt update
 
-if [ ! -d /uros_ws ]; then
-    echo "Cannot find /uros_ws folder. Please install micro_ros_setup first."
+if [ ! -d /opt/uros_ws ]; then
+    echo "Cannot find /opt/uros_ws folder. Please install micro_ros_setup first."
     exit 1
 fi
 
-cd /uros_ws
+cd /opt/uros_ws
 
 source /opt/ros/${ROS_DISTRO}/setup.bash
 source install/local_setup.bash
