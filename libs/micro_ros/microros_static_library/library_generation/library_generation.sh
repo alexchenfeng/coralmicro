@@ -6,6 +6,7 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 BASE_PATH="$SCRIPT_DIR/../"
 echo "BASE_PATH: $BASE_PATH"
+unset RMW_IMPLEMENTATION
 
 ######## Init ########
 apt update

@@ -65,5 +65,5 @@ mkdir -pv third_party/nxp/elftosb/linux/aarch64
 cp -v bin/elftosb-arm64 third_party/nxp/elftosb/linux/aarch64/elftosb
 mkdir -pv third_party/nxp/blhost/bin/linux/aarch64
 cp -v bin/blhost-arm64 third_party/nxp/blhost/bin/linux/aarch64/blhost
-python3 -m pip install pip --upgrade --break-system-packages
-python3 -m pip install -r "${SCRIPT_DIR}/scripts/requirements.txt" --break-system-packages
+uv pip install pip --upgrade
+uv pip install -r "${SCRIPT_DIR}/scripts/requirements.txt"
