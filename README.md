@@ -20,7 +20,7 @@ them to your board with the included flashtool (`scripts/flashtool.py`).
 
 ## New Features
 
-- [ ] micro ros jazzy support
+- [x] micro ros jazzy support
 - [x] compatible with latest arduino cli
 - [x] support for aarch64 platform (raspberry pi, nv jetson boards, etc...)
 
@@ -72,6 +72,32 @@ python3 scripts/flashtool.py -e blink_led
 ```
 
 You can see the code at [examples/blink_led/](examples/blink_led/).
+
+## Run micro_ros_publisher demo
+
+1. run micro ros agent on you host machine (ip: 192.168.1.10)
+
+```bash
+ros2 run micro_ros_agent micro_ros_agent udp4 -p 8889 -v 6
+```
+
+2. modify the ip address in examples/micro_ros_publisher/micro_ros_publisher.cc, point to your host machine ip address, for example:
+
+```cpp
+  rmw_ret_t rmw_ret = rmw_uros_set_custom_transport(false,
+                                (void*)"192.168.1.10",
+                                coralmicro_ros_udp_transport_open,
+                                coralmicro_ros_udp_transport_close,
+                                coralmicro_ros_udp_transport_write,
+                                coralmicro_ros_udp_transport_read);
+```
+
+3. build and flash the micro_ros_publisher demo to the board:
+
+```bash
+bash build.sh
+python3 scripts/flashtool.py -e micro_ros_publisher --wifi_ssid YOUR_WIFI_SSID  --wifi_psk YOUR_WIFI_PASSWORD
+```
 
 
 ### Reset the board to Serial Downloader
