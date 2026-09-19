@@ -1,0 +1,62 @@
+ARG BASE_IMAGE=ubuntu:24.04
+FROM ${BASE_IMAGE}
+
+ARG ROS_DISTRO=jazzy
+
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt update && apt upgrade -y
+RUN apt-get install build-essential make cmake wget zip unzip python3-pip python3-dev python-is-python3 sudo vim git libhidapi-dev tmux usbutils screen picocom -y
+
+## install ros2 base deps
+
+RUN locale && \
+	apt install locales -y && \
+	locale-gen en_US en_US.UTF-8 && \
+	update-locale LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8 && \
+	export LANG=en_US.UTF-8
+
+ENV LANG=en_US.UTF-8
+
+RUN apt install software-properties-common -y && add-apt-repository universe -y && \
+	apt update && apt install curl -y
+
+RUN ROS_APT_SOURCE_VERSION=$(curl -s https://api.github.com/repos/ros-infrastructure/ros-apt-source/releases/latest | grep -F "tag_name" | awk -F'"' '{print $4}') && \
+	curl -L -o /tmp/ros2-apt-source.deb "https://github.com/ros-infrastructure/ros-apt-source/releases/download/${ROS_APT_SOURCE_VERSION}/ros2-apt-source_${ROS_APT_SOURCE_VERSION}.$(. /etc/os-release && echo ${UBUNTU_CODENAME:-${VERSION_CODENAME}})_all.deb" && \
+	dpkg -i /tmp/ros2-apt-source.deb
+
+RUN apt update && apt install ros-dev-tools ros-$ROS_DISTRO-ros-base -y
+
+## install micro_ros_setup and dependencies
+
+WORKDIR /opt/uros_ws
+
+RUN . /opt/ros/${ROS_DISTRO}/setup.sh \
+    &&  git clone -b $ROS_DISTRO https://github.com/micro-ROS/micro_ros_setup.git src/micro_ros_setup \
+    &&  git clone -b $ROS_DISTRO https://github.com/micro-ROS/micro_ros_msgs src/micro_ros_msgs \
+    &&  git clone -b $ROS_DISTRO https://github.com/micro-ROS/micro-ROS-Agent src/micro-ROS-Agent \
+    &&  . /opt/ros/$ROS_DISTRO/setup.sh \
+    &&  apt update \
+    &&  apt install -y rsync python3-pip python3-nose clang-format pyflakes3 python3-mypy python3-pytest-mock gperf ros-$ROS_DISTRO-osrf-testing-tools-cpp python3-lttng ros-$ROS_DISTRO-mimick-vendor python3-babeltrace \
+    &&  rosdep init \
+    &&  rosdep update --rosdistro $ROS_DISTRO \
+    &&  rosdep install --from-paths src --ignore-src -y \
+    &&  colcon build \
+    &&  . install/local_setup.sh \
+    &&  rm -rf log/ build/
+
+ENV RMW_IMPLEMENTATION=rmw_fastrtps_cpp
+ENV MICROROS_DISABLE_SHM=1
+
+COPY disable_fastdds_shm.xml disable_fastdds_shm_localhost_only.xml /tmp/
+
+RUN echo ". /opt/ros/$ROS_DISTRO/setup.bash" >> ~/.bashrc
+RUN echo ". /opt/uros_ws/install/setup.bash" >> ~/.bashrc
+
+COPY ./micro-ros-agent-entrypoint.sh /micro-ros-agent-entrypoint.sh
+
+WORKDIR /opt
+RUN git clone --recurse-submodules --shallow-submodules --depth 1 -j 4 https://github.com/alexchenfeng/coralmicro.git
+WORKDIR /opt/coralmicro
+
+ENTRYPOINT ["/bin/sh", "/micro-ros-agent-entrypoint.sh"]
+CMD ["--help"]
