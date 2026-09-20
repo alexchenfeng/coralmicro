@@ -67,3 +67,4 @@ mkdir -pv third_party/nxp/blhost/bin/linux/aarch64
 cp -v bin/blhost-arm64 third_party/nxp/blhost/bin/linux/aarch64/blhost
 uv pip install pip --upgrade
 uv pip install -r "${SCRIPT_DIR}/scripts/requirements.txt"
+uv pip install -r "${SCRIPT_DIR}/arduino/requirements.txt"
