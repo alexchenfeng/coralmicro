@@ -1,5 +1,7 @@
 # Coral Dev Board Micro source code (coralmicro)
 
+![](.images/coral_micro_ros.jpg)
+
 This repository contains all the code required to build apps for the [Coral Dev
 Board Micro](https://coral.ai/products/dev-board-micro). The Dev Board Micro is
 based on the NXP RT1176 microcontroller (dual-core MCU with Cortex M7 and M4)
@@ -20,6 +22,9 @@ them to your board with the included flashtool (`scripts/flashtool.py`).
 
 ## New Features
 
+- [ ] newest arduino-cli support
+- [ ] zenoh-pico support
+- [ ] micro ros lyrical support
 - [x] micro ros jazzy support
 - [x] compatible with latest arduino cli
 - [x] support for aarch64 platform (raspberry pi, nv jetson boards, etc...)

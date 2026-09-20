@@ -58,5 +58,16 @@ WORKDIR /opt
 RUN git clone --recurse-submodules --shallow-submodules --depth 1 -j 4 https://github.com/alexchenfeng/coralmicro.git
 WORKDIR /opt/coralmicro
 
+RUN curl -LsSf https://astral.sh/uv/install.sh | env UV_UNMANAGED_INSTALL=/usr/local/bin sh
+RUN uv venv --system-site-packages && \
+	. .venv/bin/activate && \
+	git pull && \
+	bash setup.sh && \
+	# ensure build success
+	bash build.sh && \
+	rm -rf build
+
+ENV ROS_DISTRO=${ROS_DISTRO}
+
 ENTRYPOINT ["/bin/sh", "/micro-ros-agent-entrypoint.sh"]
 CMD ["--help"]
