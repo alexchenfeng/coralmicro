@@ -1,0 +1,2 @@
+bash libs/micro_ros/microros_static_library/library_generation/library_generation.sh
+bash libs/micro_ros_arduino/extras/library_generation/library_generation.sh coral_micro_wifi
