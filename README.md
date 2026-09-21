@@ -22,9 +22,10 @@ them to your board with the included flashtool (`scripts/flashtool.py`).
 
 ## New Features
 
-- [ ] newest arduino-cli support
 - [ ] zenoh-pico support
 - [ ] micro ros lyrical support
+- [x] arduino micro ros support
+- [x] newest arduino-cli support
 - [x] micro ros jazzy support
 - [x] compatible with latest arduino cli
 - [x] support for aarch64 platform (raspberry pi, nv jetson boards, etc...)
