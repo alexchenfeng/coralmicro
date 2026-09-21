@@ -36,4 +36,14 @@ void analogWriteResolution(int bits);
 
 extern coralmicro::arduino::HardwareSerial Serial;
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+void yield(void);
+
+#ifdef __cplusplus
+}
+#endif
+
 #endif  // Arduino_h
