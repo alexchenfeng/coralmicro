@@ -1,0 +1,195 @@
+diff --git a/src/link/transport/tcp/tcp_lwip.c b/src/link/transport/tcp/tcp_lwip.c
+index ea15a7b..7048231 100644
+--- a/src/link/transport/tcp/tcp_lwip.c
++++ b/src/link/transport/tcp/tcp_lwip.c
+@@ -84,6 +84,7 @@ static z_result_t _z_tcp_lwip_open(_z_sys_net_socket_t *sock, const _z_sys_net_e
+             ret = _Z_ERR_GENERIC;
+         }
+ #endif
++#if defined(LWIP_SO_LINGER) && (LWIP_SO_LINGER == 1)
+         struct linger ling;
+         ling.l_onoff = 1;
+         ling.l_linger = Z_TRANSPORT_LEASE / 1000;
+@@ -92,16 +93,23 @@ static z_result_t _z_tcp_lwip_open(_z_sys_net_socket_t *sock, const _z_sys_net_e
+             _Z_ERROR_LOG(_Z_ERR_GENERIC);
+             ret = _Z_ERR_GENERIC;
+         }
++#endif
+ 
+         for (struct addrinfo *it = endpoint._iptcp; it != NULL; it = it->ai_next) {
+-            if ((ret == _Z_RES_OK) && (connect(_z_lwip_socket_get(*sock), it->ai_addr, it->ai_addrlen) < 0)) {
+-                if (it->ai_next == NULL) {
+-                    _Z_ERROR_LOG(_Z_ERR_GENERIC);
+-                    ret = _Z_ERR_GENERIC;
++            if (ret == _Z_RES_OK) {
++                printf("[zenoh] Attempting TCP connect to router...\r\n");
++                int conn_res = connect(_z_lwip_socket_get(*sock), it->ai_addr, it->ai_addrlen);
++                if (conn_res < 0) {
++                    printf("[zenoh] TCP connect() failed (errno: %d)\r\n", errno);
++                    if (it->ai_next == NULL) {
++                        _Z_ERROR_LOG(_Z_ERR_GENERIC);
++                        ret = _Z_ERR_GENERIC;
++                        break;
++                    }
++                } else {
++                    printf("[zenoh] TCP connect() succeeded!\r\n");
+                     break;
+                 }
+-            } else {
+-                break;
+             }
+         }
+ 
+@@ -139,6 +147,7 @@ static z_result_t _z_tcp_lwip_listen(_z_sys_net_socket_t *sock, const _z_sys_net
+         ret = _Z_ERR_GENERIC;
+     }
+ #endif
++#if defined(LWIP_SO_LINGER) && (LWIP_SO_LINGER == 1)
+     struct linger ling;
+     ling.l_onoff = 1;
+     ling.l_linger = Z_TRANSPORT_LEASE / 1000;
+@@ -147,6 +156,7 @@ static z_result_t _z_tcp_lwip_listen(_z_sys_net_socket_t *sock, const _z_sys_net
+         _Z_ERROR_LOG(_Z_ERR_GENERIC);
+         ret = _Z_ERR_GENERIC;
+     }
++#endif
+ 
+     if (ret != _Z_RES_OK) {
+         close(_z_lwip_socket_get(*sock));
+@@ -202,6 +212,7 @@ static z_result_t _z_tcp_lwip_accept(const _z_sys_net_socket_t *sock_in, _z_sys_
+         _Z_ERROR_RETURN(_Z_ERR_GENERIC);
+     }
+ #endif
++#if defined(LWIP_SO_LINGER) && (LWIP_SO_LINGER == 1)
+     struct linger ling;
+     ling.l_onoff = 1;
+     ling.l_linger = Z_TRANSPORT_LEASE / 1000;
+@@ -209,6 +220,7 @@ static z_result_t _z_tcp_lwip_accept(const _z_sys_net_socket_t *sock_in, _z_sys_
+         lwip_close(con_socket);
+         _Z_ERROR_RETURN(_Z_ERR_GENERIC);
+     }
++#endif
+ 
+     _z_lwip_socket_set(sock_out, con_socket);
+     return _Z_RES_OK;
+diff --git a/src/runtime/background_executor.c b/src/runtime/background_executor.c
+index 0837877..b85bee3 100644
+--- a/src/runtime/background_executor.c
++++ b/src/runtime/background_executor.c
+@@ -1,3 +1,4 @@
++#include <stdio.h>
+ #include "zenoh-pico/runtime/background_executor.h"
+ 
+ #if Z_FEATURE_MULTI_THREAD == 1
+@@ -175,6 +176,7 @@ z_result_t _z_background_executor_inner_start(_z_background_executor_inner_t *be
+         while (!_z_atomic_bool_load(&be->_started, _z_memory_order_acquire)) {
+             z_sleep_us(10);  // wait until the executor thread sets the state to started
+         }
++        printf("[zenoh] Background executor task started!\r\n");
+     }
+     // resume the executor thread to let it proceed to run
+     z_result_t ret2 = _z_background_executor_inner_unlock_and_resume(be);
+diff --git a/src/system/freertos/system.c b/src/system/freertos/system.c
+index 499a663..a861c24 100644
+--- a/src/system/freertos/system.c
++++ b/src/system/freertos/system.c
+@@ -99,8 +99,8 @@ static void z_task_wrapper(void *arg) {
+ }
+ 
+ static z_task_attr_t z_default_task_attr = {
+-    .name = "",
+-    .priority = configMAX_PRIORITIES / 2,
++    .name = "zenoh",
++    .priority = configMAX_PRIORITIES - 2,
+     .stack_depth = 5120,
+ #if (configSUPPORT_STATIC_ALLOCATION == 1)
+     .static_allocation = false,
+@@ -334,12 +334,22 @@ z_result_t _z_condvar_wait_until(_z_condvar_t *cv, _z_mutex_t *m, const z_clock_
+ 
+ /*------------------ Sleep ------------------*/
+ z_result_t z_sleep_us(size_t time) {
+-    vTaskDelay(pdMS_TO_TICKS(time / 1000));
++    if (time == 0) {
++        taskYIELD();
++        return _Z_RES_OK;
++    }
++    TickType_t ticks = pdMS_TO_TICKS((time + 999) / 1000);
++    vTaskDelay(ticks ? ticks : 1);
+     return _Z_RES_OK;
+ }
+ 
+ z_result_t z_sleep_ms(size_t time) {
+-    vTaskDelay(pdMS_TO_TICKS(time));
++    if (time == 0) {
++        taskYIELD();
++        return _Z_RES_OK;
++    }
++    TickType_t ticks = pdMS_TO_TICKS(time);
++    vTaskDelay(ticks ? ticks : 1);
+     return _Z_RES_OK;
+ }
+ 
+@@ -389,10 +399,7 @@ z_time_t z_time_now(void) {
+ }
+ 
+ const char *z_time_now_as_str(char *const buf, unsigned long buflen) {
+-    z_time_t tv = z_time_now();
+-    struct tm ts;
+-    ts = *localtime(&tv.tv_sec);
+-    strftime(buf, buflen, "%Y-%m-%dT%H:%M:%SZ", &ts);
++    snprintf(buf, buflen, "%lu ms", (unsigned long)(xTaskGetTickCount() * portTICK_PERIOD_MS));
+     return buf;
+ }
+ 
+diff --git a/src/transport/unicast/transport.c b/src/transport/unicast/transport.c
+index d3decfb..ffca6c0 100644
+--- a/src/transport/unicast/transport.c
++++ b/src/transport/unicast/transport.c
+@@ -16,6 +16,7 @@
+ #include <stdbool.h>
+ #include <stddef.h>
+ #include <stdint.h>
++#include <stdio.h>
+ #include <stdlib.h>
+ #include <string.h>
+ 
+@@ -104,9 +105,11 @@ static z_result_t _z_unicast_handshake_open(_z_transport_unicast_establish_param
+ 
+     // Encode and send the message
+     _Z_DEBUG("Sending Z_INIT(Syn)");
++    printf("[zenoh] Handshake: Sending Z_INIT(Syn)...\r\n");
+     z_result_t ret = _z_link_send_t_msg(zl, &ism, socket);
+     _z_t_msg_clear(&ism);
+     if (ret != _Z_RES_OK) {
++        printf("[zenoh] Handshake: Failed to send Z_INIT(Syn) (err: %d)\r\n", ret);
+         return ret;
+     }
+     // Try to receive response
+@@ -118,6 +121,7 @@ static z_result_t _z_unicast_handshake_open(_z_transport_unicast_establish_param
+     }
+     param->_remote_whatami = iam._body._init._whatami;
+     _Z_DEBUG("Received Z_INIT(Ack)");
++    printf("[zenoh] Handshake: Received Z_INIT(Ack)!\r\n");
+     // Any of the size parameters in the InitAck must be less or equal than the one in the InitSyn,
+     // otherwise the InitAck message is considered invalid and it should be treated as a
+     // CLOSE message with L==0 by the Initiating Peer -- the recipient of the InitAck message.
+@@ -176,9 +180,11 @@ static z_result_t _z_unicast_handshake_open(_z_transport_unicast_establish_param
+     _z_t_msg_clear(&iam);
+     // Encode and send the message
+     _Z_DEBUG("Sending Z_OPEN(Syn)");
++    printf("[zenoh] Handshake: Sending Z_OPEN(Syn)...\r\n");
+     ret = _z_link_send_t_msg(zl, &osm, socket);
+     _z_t_msg_clear(&osm);
+     if (ret != _Z_RES_OK) {
++        printf("[zenoh] Handshake: Failed to send Z_OPEN(Syn) (err: %d)\r\n", ret);
+         return ret;
+     }
+     // Try to receive response
+@@ -191,6 +197,7 @@ static z_result_t _z_unicast_handshake_open(_z_transport_unicast_establish_param
+     }
+     // THIS LOG STRING USED IN TEST, change with caution
+     _Z_DEBUG("Received Z_OPEN(Ack)");
++    printf("[zenoh] Handshake: Received Z_OPEN(Ack)! Handshake complete.\r\n");
+     param->_lease = (oam._body._open._lease < Z_TRANSPORT_LEASE) ? oam._body._open._lease : Z_TRANSPORT_LEASE;
+     // The initial SN at RX side. Initialize the session as we had already received
+     // a message with a SN equal to initial_sn - 1.
