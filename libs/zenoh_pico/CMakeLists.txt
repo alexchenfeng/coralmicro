@@ -12,9 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+#   Zenoh-Pico Library:
+#      • Cloned Zenoh-Pico v1.10.1 into zenoh-pico.
+#      • Created the library definition in CMakeLists.txt targeting FreeRTOS and lwIP on the Cortex-M7 core (add_library_m7).
+#      • Configured config.h via configure_file with FreeRTOS multithreading, session management, and TCP client transport enabled.
+#      • Registered zenoh_pico in CMakeLists.txt.
+
 set(FRAG_MAX_SIZE 4096 CACHE STRING "Override maximum size for fragmented messages")
 set(BATCH_UNICAST_SIZE 2048 CACHE STRING "Override maximum unicast batch size")
 set(BATCH_MULTICAST_SIZE 2048 CACHE STRING "Override maximum multicast batch size")
+# Increased Z_CONFIG_SOCKET_TIMEOUT from 100 ms to 1000 ms to prevent premature timeouts during Wi-Finetwork latency.
 set(Z_CONFIG_SOCKET_TIMEOUT 1000 CACHE STRING "Default socket timeout in milliseconds")
 set(Z_TRANSPORT_LEASE 10000 CACHE STRING "Link lease duration in milliseconds")
 set(Z_TRANSPORT_LEASE_EXPIRE_FACTOR 3 CACHE STRING "Default session lease expire factor")
