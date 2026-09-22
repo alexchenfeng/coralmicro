@@ -49,3 +49,6 @@
 [submodule "third_party/littlefs-fuse"]
 	path = third_party/littlefs-fuse
 	url = https://github.com/google-coral/coralmicro-littlefs-fuse
+[submodule "third_party/zenoh-pico"]
+	path = third_party/zenoh-pico
+	url = https://github.com/eclipse-zenoh/zenoh-pico.git
