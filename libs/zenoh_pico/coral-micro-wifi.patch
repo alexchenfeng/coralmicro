@@ -1,3 +1,50 @@
+diff --git a/include/zenoh-pico/api/handlers.h b/include/zenoh-pico/api/handlers.h
+index 74adcd75..96e1f9d9 100644
+--- a/include/zenoh-pico/api/handlers.h
++++ b/include/zenoh-pico/api/handlers.h
+@@ -134,24 +134,24 @@ extern "C" {
+     }
+ 
+ #define _Z_CHANNEL_DEFINE(item_name, kind_name)                                                             \
+-    _Z_CHANNEL_DEFINE_IMPL(/* handler_type                    */ _z_##kind_name##_handler_##item_name##_t,  \
+-                           /* handler_name                    */ kind_name##_handler_##item_name,           \
+-                           /* handler_new_f_name              */ z_##kind_name##_channel_##item_name##_new, \
+-                           /* callback_type                   */ z_owned_closure_##item_name##_t,           \
+-                           /* callback_new_f                  */ z_closure_##item_name,                     \
+-                           /* collection_type                 */ _z_##kind_name##_mt_t,                     \
+-                           /* collection_new_f                */ _z_##kind_name##_mt_init,                  \
+-                           /* collection_clear_f               */ _z_##kind_name##_mt_clear,                \
+-                           /* collection_push_f               */ _z_##kind_name##_mt_push,                  \
+-                           /* collection_pull_f               */ _z_##kind_name##_mt_pull,                  \
+-                           /* collection_try_pull_f           */ _z_##kind_name##_mt_try_pull,              \
+-                           /* collection_close_f              */ _z_##kind_name##_mt_close,                 \
+-                           /* elem_owned_type                 */ z_owned_##item_name##_t,                   \
+-                           /* elem_loaned_type                */ z_loaned_##item_name##_t,                  \
+-                           /* elem_take_f                     */ z_##item_name##_take_from_loaned,          \
+-                           /* elem_move_f                     */ z_##item_name##_move,                      \
+-                           /* elem_drop_f                     */ z_##item_name##_drop,                      \
+-                           /* elem_null_f                     */ z_internal_##item_name##_null)
++    _Z_CHANNEL_DEFINE_IMPL(_z_##kind_name##_handler_##item_name##_t,                                                \
++                           kind_name##_handler_##item_name,                                                          \
++                           z_##kind_name##_channel_##item_name##_new,                                                \
++                           z_owned_closure_##item_name##_t,                                                          \
++                           z_closure_##item_name,                                                                    \
++                           _z_##kind_name##_mt_t,                                                                    \
++                           _z_##kind_name##_mt_init,                                                                 \
++                           _z_##kind_name##_mt_clear,                                                                \
++                           _z_##kind_name##_mt_push,                                                                 \
++                           _z_##kind_name##_mt_pull,                                                                 \
++                           _z_##kind_name##_mt_try_pull,                                                             \
++                           _z_##kind_name##_mt_close,                                                                \
++                           z_owned_##item_name##_t,                                                                  \
++                           z_loaned_##item_name##_t,                                                                 \
++                           z_##item_name##_take_from_loaned,                                                         \
++                           z_##item_name##_move,                                                                     \
++                           z_##item_name##_drop,                                                                     \
++                           z_internal_##item_name##_null)
+ 
+ #define _Z_CHANNEL_DUMMY_IMPL(handler_type, handler_name, item_name)                                            \
+     _Z_OWNED_TYPE_VALUE(handler_type, handler_name)                                                             \
 diff --git a/src/link/transport/tcp/tcp_lwip.c b/src/link/transport/tcp/tcp_lwip.c
 index ea15a7bb..5bd15dde 100644
 --- a/src/link/transport/tcp/tcp_lwip.c
