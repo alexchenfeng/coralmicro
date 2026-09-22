@@ -61,13 +61,65 @@ WORKDIR /opt/coralmicro
 RUN curl -LsSf https://astral.sh/uv/install.sh | env UV_UNMANAGED_INSTALL=/usr/local/bin sh
 RUN uv venv --system-site-packages && \
 	. .venv/bin/activate && \
-	git pull && \
+	git pull && git submodule update --recursive --force && \
 	bash setup.sh && \
 	# ensure build success
 	bash build.sh && \
 	rm -rf build
 
 ENV ROS_DISTRO=${ROS_DISTRO}
+
+ENV ROS_DISTRO=${ROS_DISTRO}
+
+# Arduino coral core install
+
+RUN cd /tmp && \
+	wget https://github.com/arduino/arduino-cli/releases/download/v1.5.1/arduino-cli_1.5.1_Linux_ARM64.tar.gz && \
+	tar xf arduino-cli_1.5.1_Linux_ARM64.tar.gz && \
+	mv arduino-cli /usr/local/bin/ && \
+	rm -fv arduino-cli_1.5.1_Linux_ARM64.tar.gz LICENSE.txt
+
+RUN arduino-cli config init && arduino-cli core update-index
+
+## build arduino core and flashtool
+
+ENV TEMP_ARDUINO_CORE_DIR=/tmp/arduino-core-build
+ENV TEMP_ARDUINO_FLASHTOOL_DIR=/tmp/flashtool-build
+ENV TEMP_MANIFEST_DIR=/tmp/arduino-manifest
+ARG ARDUINO_CORE_MANIFEST_VERSION=1.0.1
+
+RUN . .venv/bin/activate \
+	&& python3 arduino/package.py --core --output_dir $TEMP_ARDUINO_CORE_DIR  \
+	&& python3 arduino/package.py --flashtool --output_dir $TEMP_ARDUINO_FLASHTOOL_DIR \
+	&& python3 arduino/package.py --manifest --manifest_revision $ARDUINO_CORE_MANIFEST_VERSION  --output_dir $TEMP_MANIFEST_DIR  \
+	&& cd $TEMP_ARDUINO_CORE_DIR && tar xf * \
+	&& cd $TEMP_ARDUINO_FLASHTOOL_DIR && tar xf * \
+ 	&& mkdir -pv ~/.arduino15/packages/coral/hardware/coral_micro/${ARDUINO_CORE_MANIFEST_VERSION} \
+	&& mkdir -pv ~/.arduino15/packages/coral/tools/arm-none-eabi-gcc \
+	&& mkdir -pv ~/.arduino15/packages/coral/tools/flashtool/${ARDUINO_CORE_MANIFEST_VERSION} \
+	&& cd ~/.arduino15/packages/coral/hardware/coral_micro/${ARDUINO_CORE_MANIFEST_VERSION} \
+	&& cp -a $TEMP_ARDUINO_CORE_DIR/*/* ./ \
+	&& cp -v $TEMP_MANIFEST_DIR/* ./ \
+	&& cd ~/.arduino15/packages/coral/tools/arm-none-eabi-gcc \
+	&& ln -sv /opt/coralmicro/third_party/toolchain/gcc-arm-none-eabi ./9-2020q2 \
+	&& cd ~/.arduino15/packages/coral/tools/flashtool/${ARDUINO_CORE_MANIFEST_VERSION} \
+        && cp -v $TEMP_ARDUINO_FLASHTOOL_DIR/*/flashtool ./ \
+	&& rm -rf ${TEMP_ARDUINO_CORE_DIR} ${TEMP_ARDUINO_FLASHTOOL_DIR} ${TEMP_MANIFEST_DIR}
+
+RUN arduino-cli core list && arduino-cli lib list
+
+## install arduino micro ros lib
+
+RUN mkdir -pv ~/Arduino/libraries && \
+	cd ~/Arduino/libraries && \
+	ln -sv /opt/coralmicro/libs/micro_ros_arduino ./ && \
+	cd ~/ && \
+	arduino-cli lib list
+
+RUN arduino-cli completion bash > ~/.arduino_cli_completion.sh && \
+	apt update && apt install bash-completion -y && \
+	echo '[[ -r /usr/share/bash-completion/bash_completion ]] && . /usr/share/bash-completion/bash_completion' >> ~/.bashrc && \
+	echo "source  ~/.arduino_cli_completion.sh" >> ~/.bashrc
 
 ENTRYPOINT ["/bin/sh", "/micro-ros-agent-entrypoint.sh"]
 CMD ["--help"]
