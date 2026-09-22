@@ -103,7 +103,7 @@ index 08378776..b85bee38 100644
      // resume the executor thread to let it proceed to run
      z_result_t ret2 = _z_background_executor_inner_unlock_and_resume(be);
 diff --git a/src/system/freertos/system.c b/src/system/freertos/system.c
-index 499a6630..ddcb3fe2 100644
+index 499a6630..218651ae 100644
 --- a/src/system/freertos/system.c
 +++ b/src/system/freertos/system.c
 @@ -99,8 +99,8 @@ static void z_task_wrapper(void *arg) {
@@ -117,20 +117,17 @@ index 499a6630..ddcb3fe2 100644
      .stack_depth = 5120,
  #if (configSUPPORT_STATIC_ALLOCATION == 1)
      .static_allocation = false,
-@@ -334,12 +334,32 @@ z_result_t _z_condvar_wait_until(_z_condvar_t *cv, _z_mutex_t *m, const z_clock_
+@@ -334,12 +334,29 @@ z_result_t _z_condvar_wait_until(_z_condvar_t *cv, _z_mutex_t *m, const z_clock_
  
  /*------------------ Sleep ------------------*/
  z_result_t z_sleep_us(size_t time) {
 -    vTaskDelay(pdMS_TO_TICKS(time / 1000));
-+    /*   
-+    Zenoh-Pico's z_sleep_us was implemented as:
++    /*
++     * Zenoh-Pico's z_sleep_us was implemented as:
 +        vTaskDelay(pdMS_TO_TICKS(time / 1000));
 +    For time = 10 microseconds, 10 / 1000 == 0, evaluating to vTaskDelay(0).
 +
-+    Starvation Deadlock:
-+        In FreeRTOS, vTaskDelay(0) only yields to tasks of equal or higher priority. It never blocks the calling task (app_main,
-+        priority 3) and never yields to lower-priority tasks (priority 2). Because Coral Micro also configures configUSE_TIME_SLICING 0, 
-+        app_main spun at 100% CPU in an infinite busy loop, completely starving the background executor task from ever starting.
++    Starvation Deadlock: In FreeRTOS, vTaskDelay(0) only yields to tasks of equal or higher priority. It never blocks the calling task (app_main,priority 3) and never yields to lower-priority tasks (priority 2). Because Coral Micro also configures configUSE_TIME_SLICING 0, app_main spun at 100% CPU in an infinite busy loop, completely starving the background executor task from ever starting.
 +    */
 +    if (time == 0) {
 +        taskYIELD();
@@ -152,7 +149,7 @@ index 499a6630..ddcb3fe2 100644
      return _Z_RES_OK;
  }
  
-@@ -389,10 +409,8 @@ z_time_t z_time_now(void) {
+@@ -389,10 +406,8 @@ z_time_t z_time_now(void) {
  }
  
  const char *z_time_now_as_str(char *const buf, unsigned long buflen) {
