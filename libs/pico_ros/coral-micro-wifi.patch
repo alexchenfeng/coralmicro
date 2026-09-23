@@ -1,0 +1,62 @@
+diff --git a/.gitmodules b/.gitmodules
+index 44d470b..135bbb8 100644
+--- a/.gitmodules
++++ b/.gitmodules
+@@ -1,6 +1,6 @@
+ [submodule "thirdparty/zenoh-pico"]
+ 	path = thirdparty/zenoh-pico
+-	url = git@github.com:g4sp3r/zenoh-pico.git
++	url = https://github.com/g4sp3r/zenoh-pico.git
+ [submodule "thirdparty/Micro-CDR"]
+ 	path = thirdparty/Micro-CDR
+ 	url = https://github.com/eProsima/Micro-CDR
+diff --git a/src/picoros.c b/src/picoros.c
+index f1ed6d6..fc918a8 100644
+--- a/src/picoros.c
++++ b/src/picoros.c
+@@ -29,7 +29,17 @@
+ /* Private variables ---------------------------------------------------------*/
+ static z_owned_session_t s_wrapper;
+ /* Private function prototypes -----------------------------------------------*/
+-/* Private functions ---------------------------------------------------------*/
++static inline int64_t _rmw_get_time_ns(void) {
++#if defined(ZENOH_FREERTOS_LWIP) || defined(SDK_OS_FREE_RTOS)
++    return (int64_t)xTaskGetTickCount() * (1000000000LL / configTICK_RATE_HZ);
++#elif defined(__ZEPHYR__)
++    return (int64_t)k_uptime_get() * 1000000LL;
++#else
++    z_clock_t now = z_clock_now();
++    return (int64_t)now.tv_sec * 1000000000LL + now.tv_nsec;
++#endif
++}
++
+ static void rmw_zenoh_gen_attachment_gid(rmw_attachment_t* attachment) {
+     attachment->rmw_gid_size = RMW_GID_SIZE;
+     for (int i = 0; i < RMW_GID_SIZE; i++) {
+@@ -181,7 +191,7 @@ static void queriable_data_handler(z_loaned_query_t *query, void *arg) {
+ 
+         // rmw attachment
+         srv->attachment.sequence_number = 1;
+-        srv->attachment.time = 1000000000 * z_clock_now().tv_sec + z_clock_now().tv_nsec;
++        srv->attachment.time = _rmw_get_time_ns();
+         z_query_reply_options_t options;
+         z_query_reply_options_default(&options);
+         z_owned_bytes_t tx_attachment;
+@@ -383,7 +393,7 @@ picoros_res_t picoros_publish(picoros_publisher_t* pub, uint8_t* payload, size_t
+     z_publisher_put_options_default(&options);
+ 
+     pub->attachment.sequence_number++;
+-    pub->attachment.time = 1000000000 * z_clock_now().tv_sec + z_clock_now().tv_nsec;
++    pub->attachment.time = _rmw_get_time_ns();
+ 
+     z_owned_bytes_t z_attachment;
+     z_bytes_from_static_buf(&z_attachment, (uint8_t*)&pub->attachment, sizeof(rmw_attachment_t));
+@@ -534,7 +544,7 @@ picoros_res_t picoros_service_call(picoros_srv_client_t * client, uint8_t* paylo
+     rmw_attachment_t attachment = {
+         .rmw_gid_size = RMW_GID_SIZE,
+         .sequence_number = 1,
+-        .time = z_clock_now().tv_nsec,
++        .time = _rmw_get_time_ns(),
+     };
+     z_owned_bytes_t tx_attachment;
+     z_bytes_copy_from_buf(&tx_attachment, (uint8_t*)&attachment, sizeof(rmw_attachment_t));
