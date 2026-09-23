@@ -72,6 +72,9 @@ void RunPicoRosPublisher() {
   // Turn on Status LED indicating system is alive
   LedSet(Led::kStatus, true);
 
+  // Initialize temperature sensor hardware
+  TempSensorInit();
+
   // Initialize and connect Wi-Fi
   printf("Turning on Wi-Fi interface...\r\n");
   if (!WiFiTurnOn(/*default_iface=*/true)) {
@@ -154,13 +157,15 @@ void RunPicoRosPublisher() {
 
     // Collect telemetry from hardware sensors
     float cpu_temp = TempSensorRead(TempSensor::kCpu);
-    uint64_t uptime_ms = TimerMillis();
+    uint32_t uptime_ms = static_cast<uint32_t>(TimerMillis());
 
     // Format human-readable string message
+    // Note: newlib-nano (libc_nano) does not support 64-bit %llu; using %lu with 32-bit uint32_t
+    // avoids corrupting subsequent variadic arguments (which previously caused cpu_temp to read 0.0C).
     snprintf(msg_text, sizeof(msg_text),
-             "[Coral Micro #%lu] uptime: %llums | cpu: %.1fC",
+             "[Coral Micro #%lu] uptime: %lums | cpu: %.1fC",
              static_cast<unsigned long>(seq),
-             static_cast<unsigned long long>(uptime_ms),
+             static_cast<unsigned long>(uptime_ms),
              static_cast<double>(cpu_temp));
 
     // Serialize ROS 2 String message using Micro-CDR via picoserdes

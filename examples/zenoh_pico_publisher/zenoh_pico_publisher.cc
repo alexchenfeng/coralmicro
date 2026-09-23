@@ -44,6 +44,9 @@ void RunZenohPublisher() {
   // Turn on Status LED
   LedSet(Led::kStatus, true);
 
+  // Initialize temperature sensor hardware
+  TempSensorInit();
+
   // Initialize and connect Wi-Fi
   printf("Turning on Wi-Fi interface...\r\n");
   if (!WiFiTurnOn(/*default_iface=*/true)) {
@@ -102,12 +105,14 @@ void RunZenohPublisher() {
 
   while (true) {
     float cpu_temp = TempSensorRead(TempSensor::kCpu);
-    uint64_t uptime_ms = TimerMillis();
+    uint32_t uptime_ms = static_cast<uint32_t>(TimerMillis());
 
     // Format JSON telemetry payload
     int len = snprintf(msg_buf, sizeof(msg_buf),
-                       "{\"seq\":%lu,\"cpu_temp_c\":%.2f,\"uptime_ms\":%llu,\"device\":\"coralmicro\"}",
-                       (unsigned long)seq, (double)cpu_temp, (unsigned long long)uptime_ms);
+                       "{\"seq\":%lu,\"cpu_temp_c\":%.2f,\"uptime_ms\":%lu,\"device\":\"coralmicro\"}",
+                       static_cast<unsigned long>(seq),
+                       static_cast<double>(cpu_temp),
+                       static_cast<unsigned long>(uptime_ms));
 
     if (len > 0) {
       z_owned_bytes_t payload;
