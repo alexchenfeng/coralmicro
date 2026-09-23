@@ -26,9 +26,9 @@
 #include "picoserdes.h"
 
 // Configuration: Adjust locator to point to your Zenoh router (running rmw_zenoh or zenohd).
-// Example: "tcp/192.168.1.109:30517"
+// Example: "tcp/192.168.1.105:7447"
 #ifndef ZENOH_ROUTER_LOCATOR
-#define ZENOH_ROUTER_LOCATOR "tcp/192.168.1.109:30517"
+#define ZENOH_ROUTER_LOCATOR "tcp/192.168.1.105:7447"
 #endif
 
 #ifndef ROS_DOMAIN_ID

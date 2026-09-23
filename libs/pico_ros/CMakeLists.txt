@@ -47,6 +47,8 @@ target_compile_definitions(libs_pico_ros PUBLIC
     ZENOH_FREERTOS_LWIP=1
     ZENOH_COMPILER_GCC=1
     USER_TYPE_FILE="${PICOROS_USER_TYPE_FILE}"
+    Z_TRANSPORT_LEASE=60000
+    Z_TRANSPORT_LEASE_EXPIRE_FACTOR=2
 )
 
 target_compile_options(libs_pico_ros PRIVATE

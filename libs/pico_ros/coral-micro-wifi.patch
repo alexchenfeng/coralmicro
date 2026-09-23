@@ -11,7 +11,7 @@ index 44d470b..135bbb8 100644
  	path = thirdparty/Micro-CDR
  	url = https://github.com/eProsima/Micro-CDR
 diff --git a/src/picoros.c b/src/picoros.c
-index f1ed6d6..fc918a8 100644
+index f1ed6d6..b3f35fc 100644
 --- a/src/picoros.c
 +++ b/src/picoros.c
 @@ -29,7 +29,17 @@
@@ -42,7 +42,31 @@ index f1ed6d6..fc918a8 100644
          z_query_reply_options_t options;
          z_query_reply_options_default(&options);
          z_owned_bytes_t tx_attachment;
-@@ -383,7 +393,7 @@ picoros_res_t picoros_publish(picoros_publisher_t* pub, uint8_t* payload, size_t
+@@ -313,6 +323,13 @@ picoros_res_t picoros_single_threaded_loop(picoros_interface_t* ifx){
+ #endif
+ 
+ bool picoros_interface_is_up(void) {
++    if (z_session_is_closed(z_session_loan(&s_wrapper))) {
++        return false;
++    }
++    const _z_session_t* zs = _Z_RC_IN_VAL(z_session_loan(&s_wrapper));
++    if (zs == NULL || !_z_session_has_router_peer(zs)) {
++        return false;
++    }
+     return ( zp_read_task_is_running(z_session_loan(&s_wrapper))
+     || zp_lease_task_is_running(z_session_loan(&s_wrapper)) );
+ }
+@@ -378,12 +395,17 @@ picoros_res_t picoros_publisher_declare(picoros_node_t* node, picoros_publisher_
+ 
+ // Publish to a topic
+ picoros_res_t picoros_publish(picoros_publisher_t* pub, uint8_t* payload, size_t len) {
++    if (!picoros_interface_is_up()) {
++        _PR_LOG("Unable to publish payload! Interface is down\n");
++        return PICOROS_ERROR;
++    }
++
+     z_result_t res = Z_OK;
+     z_publisher_put_options_t options;
      z_publisher_put_options_default(&options);
  
      pub->attachment.sequence_number++;
@@ -51,7 +75,7 @@ index f1ed6d6..fc918a8 100644
  
      z_owned_bytes_t z_attachment;
      z_bytes_from_static_buf(&z_attachment, (uint8_t*)&pub->attachment, sizeof(rmw_attachment_t));
-@@ -534,7 +544,7 @@ picoros_res_t picoros_service_call(picoros_srv_client_t * client, uint8_t* paylo
+@@ -534,7 +556,7 @@ picoros_res_t picoros_service_call(picoros_srv_client_t * client, uint8_t* paylo
      rmw_attachment_t attachment = {
          .rmw_gid_size = RMW_GID_SIZE,
          .sequence_number = 1,

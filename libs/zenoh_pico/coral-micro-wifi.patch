@@ -209,6 +209,18 @@ index 499a6630..218651ae 100644
      return buf;
  }
  
+diff --git a/src/transport/unicast/lease.c b/src/transport/unicast/lease.c
+index 18700c7f..fee61d01 100644
+--- a/src/transport/unicast/lease.c
++++ b/src/transport/unicast/lease.c
+@@ -143,6 +143,7 @@ _z_fut_fn_result_t _zp_unicast_lease_task_fn(void *ztu_arg, _z_executor_t *execu
+             curr_peer->common._received = false;
+             return _z_fut_fn_result_wake_up_after((unsigned long)ztu->_common._lease);
+         } else {
++            printf("[zenoh] Transport lease expired (%lu ms without message from router)! Closing session.\r\n", (unsigned long)ztu->_common._lease);
+             // THIS LOG STRING USED IN TEST, change with caution
+             _Z_INFO("Closing session because it has expired after %zums", ztu->_common._lease);
+             return _zp_unicast_failed_result(ztu, executor);
 diff --git a/src/transport/unicast/transport.c b/src/transport/unicast/transport.c
 index d3decfb0..ffca6c04 100644
 --- a/src/transport/unicast/transport.c
