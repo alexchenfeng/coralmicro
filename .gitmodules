@@ -52,3 +52,6 @@
 [submodule "third_party/zenoh-pico"]
 	path = third_party/zenoh-pico
 	url = https://github.com/eclipse-zenoh/zenoh-pico.git
+[submodule "third_party/Pico-ROS-software"]
+	path = third_party/Pico-ROS-software
+	url = https://github.com/Pico-ROS/Pico-ROS-software.git
