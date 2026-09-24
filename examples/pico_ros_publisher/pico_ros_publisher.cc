@@ -142,17 +142,45 @@ void RunPicoRosPublisher() {
   while (true) {
     // Check connection health; reconnect if disconnected
     if (!picoros_interface_is_up()) {
-      printf("WARNING: Pico-ROS connection lost. Reconnecting to %s...\r\n", ZENOH_ROUTER_LOCATOR);
+      printf("\r\n[reconnect] WARNING: Pico-ROS connection lost! Reconnecting to %s...\r\n", ZENOH_ROUTER_LOCATOR);
       picoros_publisher_drop(&s_publisher);
       picoros_node_drop(&s_node);
       picoros_interface_close();
 
-      while (picoros_interface_init(&ifx) != PICOROS_OK) {
-        vTaskDelay(pdMS_TO_TICKS(2000));
+      // Check and recover Wi-Fi link if disconnected
+      if (!coralmicro::WiFiIsConnected()) {
+        printf("[reconnect] Wi-Fi link down! Attempting to reconnect to Wi-Fi AP...\r\n");
+        int wifi_attempts = 1;
+        while (!coralmicro::WiFiConnect(5)) {
+          printf("[reconnect] Wi-Fi reconnect attempt %d failed, retrying in 3s...\r\n", wifi_attempts++);
+          vTaskDelay(pdMS_TO_TICKS(3000));
+        }
+        auto new_ip = coralmicro::WiFiGetIp();
+        printf("[reconnect] Wi-Fi re-established! IP: %s\r\n", new_ip.has_value() ? new_ip->c_str() : "unknown");
       }
+
+      int pico_attempts = 1;
+      while (true) {
+        printf("[reconnect] Connecting to Zenoh router (%s) [attempt %d]...\r\n",
+               ZENOH_ROUTER_LOCATOR, pico_attempts++);
+        if (picoros_interface_init(&ifx) == PICOROS_OK) {
+          printf("[reconnect] Zenoh session connected successfully!\r\n");
+          break;
+        }
+        printf("[reconnect] Zenoh connect failed, retrying in 3s...\r\n");
+        vTaskDelay(pdMS_TO_TICKS(3000));
+
+        // Periodically verify Wi-Fi link during retries
+        if (!coralmicro::WiFiIsConnected()) {
+          printf("[reconnect] Wi-Fi link lost during retries! Re-associating...\r\n");
+          coralmicro::WiFiConnect(5);
+        }
+      }
+
+      printf("[reconnect] Re-declaring node and publisher...\r\n");
       picoros_node_init(&s_node);
       picoros_publisher_declare(&s_node, &s_publisher);
-      printf("Pico-ROS reconnected successfully!\r\n");
+      printf("Pico-ROS reconnected successfully!\r\n\r\n");
     }
 
     // Collect telemetry from hardware sensors

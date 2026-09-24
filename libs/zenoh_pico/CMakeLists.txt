@@ -23,8 +23,8 @@ set(BATCH_UNICAST_SIZE 2048 CACHE STRING "Override maximum unicast batch size")
 set(BATCH_MULTICAST_SIZE 2048 CACHE STRING "Override maximum multicast batch size")
 # Increased Z_CONFIG_SOCKET_TIMEOUT from 100 ms to 1000 ms to prevent premature timeouts during Wi-Finetwork latency.
 set(Z_CONFIG_SOCKET_TIMEOUT 1000 CACHE STRING "Default socket timeout in milliseconds")
-set(Z_TRANSPORT_LEASE 60000 CACHE STRING "Link lease duration in milliseconds" FORCE)
-set(Z_TRANSPORT_LEASE_EXPIRE_FACTOR 2 CACHE STRING "Default session lease expire factor" FORCE)
+set(Z_TRANSPORT_LEASE 120000 CACHE STRING "Link lease duration in milliseconds" FORCE)
+set(Z_TRANSPORT_LEASE_EXPIRE_FACTOR 3 CACHE STRING "Default session lease expire factor" FORCE)
 set(Z_RUNTIME_MAX_TASKS 64 CACHE STRING "Maximum number of tasks in zenoh-pico runtime")
 set(Z_RUNTIME_IDLE_READ_TASK_SLEEP 0 CACHE STRING "Idle read task sleep duration in milliseconds")
 set(Z_TRANSPORT_ACCEPT_TIMEOUT 1000 CACHE STRING "Link accept timeout in milliseconds")
@@ -122,8 +122,8 @@ target_compile_definitions(libs_zenoh_pico PUBLIC
     ZENOH_COMPILER_GCC=1
     INET6_ADDRSTRLEN=46
     u32_t=uint32_t
-    Z_TRANSPORT_LEASE=60000
-    Z_TRANSPORT_LEASE_EXPIRE_FACTOR=2
+    Z_TRANSPORT_LEASE=120000
+    Z_TRANSPORT_LEASE_EXPIRE_FACTOR=3
 )
 
 target_compile_options(libs_zenoh_pico PRIVATE
