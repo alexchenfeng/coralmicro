@@ -26,6 +26,9 @@ namespace coralmicro {
 void NtpInit() {
   tcpip_callback(
       [](void*) -> void {
+        if (sntp_enabled()) {
+          sntp_stop();
+        }
         sntp_setoperatingmode(SNTP_OPMODE_POLL);
         sntp_setservername(0, "0.pool.ntp.org");
         sntp_setservername(1, "1.pool.ntp.org");

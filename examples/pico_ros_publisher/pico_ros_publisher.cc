@@ -64,6 +64,37 @@ static picoros_publisher_t s_publisher = {
 // Buffer for CDR serialization
 static uint8_t s_pub_buf[512];
 
+bool IsNetworkReady() {
+  if (!WiFiIsConnected()) {
+    return false;
+  }
+  auto ip = WiFiGetIp();
+  if (!ip.has_value() || ip->empty() || *ip == "0.0.0.0") {
+    return false;
+  }
+  return true;
+}
+
+bool EnsureWiFiConnected(int max_retries = 10) {
+  if (IsNetworkReady()) {
+    return true;
+  }
+  printf("[reconnect] Network or IP link down! Re-associating with Wi-Fi AP...\r\n");
+  int attempts = 1;
+  while (attempts <= max_retries) {
+    if (WiFiConnect(3)) {
+      auto ip = WiFiGetIp();
+      if (ip.has_value() && !ip->empty() && *ip != "0.0.0.0") {
+        printf("[reconnect] Wi-Fi re-established! IP: %s\r\n", ip->c_str());
+        return true;
+      }
+    }
+    printf("[reconnect] Wi-Fi reconnect attempt %d failed, retrying in 3s...\r\n", attempts++);
+    vTaskDelay(pdMS_TO_TICKS(3000));
+  }
+  return false;
+}
+
 void RunPicoRosPublisher() {
   printf("=========================================\r\n");
   printf("  Coral Micro Pico-ROS FreeRTOS Demo     \r\n");
@@ -139,6 +170,7 @@ void RunPicoRosPublisher() {
   uint32_t seq = 0;
   bool user_led_state = false;
 
+
   while (true) {
     // Check connection health; reconnect if disconnected
     if (!picoros_interface_is_up()) {
@@ -147,20 +179,13 @@ void RunPicoRosPublisher() {
       picoros_node_drop(&s_node);
       picoros_interface_close();
 
-      // Check and recover Wi-Fi link if disconnected
-      if (!coralmicro::WiFiIsConnected()) {
-        printf("[reconnect] Wi-Fi link down! Attempting to reconnect to Wi-Fi AP...\r\n");
-        int wifi_attempts = 1;
-        while (!coralmicro::WiFiConnect(5)) {
-          printf("[reconnect] Wi-Fi reconnect attempt %d failed, retrying in 3s...\r\n", wifi_attempts++);
-          vTaskDelay(pdMS_TO_TICKS(3000));
-        }
-        auto new_ip = coralmicro::WiFiGetIp();
-        printf("[reconnect] Wi-Fi re-established! IP: %s\r\n", new_ip.has_value() ? new_ip->c_str() : "unknown");
-      }
+      // Check and recover Wi-Fi and IP address
+      EnsureWiFiConnected();
 
       int pico_attempts = 1;
       while (true) {
+        EnsureWiFiConnected();
+
         printf("[reconnect] Connecting to Zenoh router (%s) [attempt %d]...\r\n",
                ZENOH_ROUTER_LOCATOR, pico_attempts++);
         if (picoros_interface_init(&ifx) == PICOROS_OK) {
@@ -170,10 +195,29 @@ void RunPicoRosPublisher() {
         printf("[reconnect] Zenoh connect failed, retrying in 3s...\r\n");
         vTaskDelay(pdMS_TO_TICKS(3000));
 
-        // Periodically verify Wi-Fi link during retries
-        if (!coralmicro::WiFiIsConnected()) {
-          printf("[reconnect] Wi-Fi link lost during retries! Re-associating...\r\n");
-          coralmicro::WiFiConnect(5);
+        // Periodically verify Wi-Fi and IP address during retries
+        if (!IsNetworkReady()) {
+          printf("[reconnect] Wi-Fi link lost or IP expired during retries! Re-associating...\r\n");
+          EnsureWiFiConnected();
+        }
+
+        // If Zenoh router is unreachable for several attempts, provide diagnostics
+        if (pico_attempts == 10) {
+          auto cur_ip = WiFiGetIp();
+          printf("\r\n[reconnect] DIAGNOSTIC: Board IP is %s. Router %s has not responded for 10 attempts.\r\n"
+                 "  Please check:\r\n"
+                 "  1) Is the Zenoh router/daemon running on %s?\r\n"
+                 "  2) Did the host machine IP change or enter sleep/standby mode?\r\n"
+                 "  3) Is port 7447 accessible without firewall blocks?\r\n\r\n",
+                 cur_ip.has_value() ? cur_ip->c_str() : "unknown",
+                 ZENOH_ROUTER_LOCATOR, ZENOH_ROUTER_LOCATOR);
+        }
+
+        // After every 20 failed attempts, perform a full Wi-Fi and DHCP reset to clear any stale lwIP socket/ARP state
+        if (pico_attempts % 20 == 0) {
+          printf("[reconnect] Refreshing Wi-Fi association and DHCP lease...\r\n");
+          WiFiDisconnect();
+          EnsureWiFiConnected();
         }
       }
 
