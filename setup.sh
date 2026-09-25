@@ -65,6 +65,12 @@ mkdir -pv third_party/nxp/elftosb/linux/aarch64
 cp -v bin/elftosb-arm64 third_party/nxp/elftosb/linux/aarch64/elftosb
 mkdir -pv third_party/nxp/blhost/bin/linux/aarch64
 cp -v bin/blhost-arm64 third_party/nxp/blhost/bin/linux/aarch64/blhost
+
+# patches
+git apply --directory third_party/zenoh-pico ./libs/zenoh_pico/coral-micro-wifi.patch
+git apply --directory third_party/Pico-ROS-software  ./libs/pico_ros/coral-micro-wifi.patch
+# end patches
+
 uv pip install pip --upgrade
 uv pip install -r "${SCRIPT_DIR}/scripts/requirements.txt"
 uv pip install -r "${SCRIPT_DIR}/arduino/requirements.txt"
