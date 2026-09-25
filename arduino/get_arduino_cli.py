@@ -26,8 +26,6 @@ def main():
       description='Download Arduino CLI',
       formatter_class=argparse.ArgumentDefaultsHelpFormatter
   )
-  parser.add_argument('--system', default=platform.system(),
-                      help='Arduino CLI for: Windows, Darwin, Linux')
   parser.add_argument('--version', required=True,
                       help='Arduino CLI version')
   parser.add_argument('--output_dir', required=True,
@@ -35,12 +33,27 @@ def main():
   args = parser.parse_args()
 
   version = args.version
-  name = {
-      'Windows': 'Windows_64bit.zip',
-      'Darwin': 'macOS_64bit.tar.gz',
-      'Linux': 'Linux_64bit.tar.gz'
-  }[args.system]
-  url = f'https://github.com/arduino/arduino-cli/releases/download/{version}/arduino-cli_{version}_{name}'
+
+  system_name = platform.system()
+  processor_arch = platform.processor()
+
+  if system_name == 'Linux':
+    if processor_arch == 'aarch64':
+      name = 'Linux_ARM64.tar.gz'
+    elif processor_arch == 'armv6l':
+      name = 'Linux_ARMv6.tar.gz'
+    elif processor_arch == 'armv7l':
+      name = 'Linux_ARMv7.tar.gz'
+    else:
+      name = 'Linux_64bit.tar.gz'
+  elif system_name == 'Darwin':
+    name = 'macOS_64bit.tar.gz'
+  elif system_name == 'Windows':
+    name = 'Windows_64bit.zip'
+  else:
+    raise ValueError(f'Unsupported system: {system_name} {processor_arch}')
+
+  url = f'https://github.com/arduino/arduino-cli/releases/download/v{version}/arduino-cli_{version}_{name}'
   print(url)
 
   filename, _ = urllib.request.urlretrieve(url)
