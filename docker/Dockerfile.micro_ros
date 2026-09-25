@@ -61,7 +61,8 @@ WORKDIR /opt/coralmicro
 RUN curl -LsSf https://astral.sh/uv/install.sh | env UV_UNMANAGED_INSTALL=/usr/local/bin sh
 RUN uv venv --system-site-packages && \
 	. .venv/bin/activate && \
-	git pull && git submodule update --recursive --force && \
+	git pull && git submodule sync --recursive && \
+	git submodule update --init --recursive --force && \
 	bash setup.sh && \
 	# ensure build success
 	bash build.sh && \
@@ -73,11 +74,8 @@ ENV ROS_DISTRO=${ROS_DISTRO}
 
 # Arduino coral core install
 
-RUN cd /tmp && \
-	wget https://github.com/arduino/arduino-cli/releases/download/v1.5.1/arduino-cli_1.5.1_Linux_ARM64.tar.gz && \
-	tar xf arduino-cli_1.5.1_Linux_ARM64.tar.gz && \
-	mv arduino-cli /usr/local/bin/ && \
-	rm -fv arduino-cli_1.5.1_Linux_ARM64.tar.gz LICENSE.txt
+RUN . .venv/bin/activate && \
+	python3 arduino/get_arduino_cli.py --version 1.5.1 --output_dir /usr/local/bin/
 
 RUN arduino-cli config init && arduino-cli core update-index
 
