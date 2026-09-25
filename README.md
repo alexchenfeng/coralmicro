@@ -22,8 +22,8 @@ them to your board with the included flashtool (`scripts/flashtool.py`).
 
 ## New Features
 
-- [ ] zenoh-pico support
 - [ ] micro ros lyrical support
+- [x] zenoh-pico support
 - [x] arduino micro ros support
 - [x] newest arduino-cli support
 - [x] micro ros jazzy support
