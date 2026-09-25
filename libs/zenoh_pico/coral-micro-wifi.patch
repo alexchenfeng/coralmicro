@@ -46,7 +46,7 @@ index 74adcd75..96e1f9d9 100644
  #define _Z_CHANNEL_DUMMY_IMPL(handler_type, handler_name, item_name)                                            \
      _Z_OWNED_TYPE_VALUE(handler_type, handler_name)                                                             \
 diff --git a/src/link/transport/tcp/tcp_lwip.c b/src/link/transport/tcp/tcp_lwip.c
-index ea15a7bb..5bd15dde 100644
+index ea15a7bb..d9c64695 100644
 --- a/src/link/transport/tcp/tcp_lwip.c
 +++ b/src/link/transport/tcp/tcp_lwip.c
 @@ -84,6 +84,20 @@ static z_result_t _z_tcp_lwip_open(_z_sys_net_socket_t *sock, const _z_sys_net_e
@@ -70,7 +70,7 @@ index ea15a7bb..5bd15dde 100644
          struct linger ling;
          ling.l_onoff = 1;
          ling.l_linger = Z_TRANSPORT_LEASE / 1000;
-@@ -92,16 +106,23 @@ static z_result_t _z_tcp_lwip_open(_z_sys_net_socket_t *sock, const _z_sys_net_e
+@@ -92,24 +106,32 @@ static z_result_t _z_tcp_lwip_open(_z_sys_net_socket_t *sock, const _z_sys_net_e
              _Z_ERROR_LOG(_Z_ERR_GENERIC);
              ret = _Z_ERR_GENERIC;
          }
@@ -100,7 +100,17 @@ index ea15a7bb..5bd15dde 100644
              }
          }
  
-@@ -139,6 +160,7 @@ static z_result_t _z_tcp_lwip_listen(_z_sys_net_socket_t *sock, const _z_sys_net
+         if (ret != _Z_RES_OK) {
+-            close(_z_lwip_socket_get(*sock));
++	     lwip_close(_z_lwip_socket_get(*sock));
+             _z_lwip_socket_set(sock, -1);
+         }
+     } else {
++	printf("[zenoh] ERROR: lwip_socket() failed (errno: %d, socket exhaustion?)\r\n", errno);
+         _Z_ERROR_LOG(_Z_ERR_GENERIC);
+         ret = _Z_ERR_GENERIC;
+     }
+@@ -139,6 +161,7 @@ static z_result_t _z_tcp_lwip_listen(_z_sys_net_socket_t *sock, const _z_sys_net
          ret = _Z_ERR_GENERIC;
      }
  #endif
@@ -108,15 +118,28 @@ index ea15a7bb..5bd15dde 100644
      struct linger ling;
      ling.l_onoff = 1;
      ling.l_linger = Z_TRANSPORT_LEASE / 1000;
-@@ -147,6 +169,7 @@ static z_result_t _z_tcp_lwip_listen(_z_sys_net_socket_t *sock, const _z_sys_net
+@@ -147,9 +170,10 @@ static z_result_t _z_tcp_lwip_listen(_z_sys_net_socket_t *sock, const _z_sys_net
          _Z_ERROR_LOG(_Z_ERR_GENERIC);
          ret = _Z_ERR_GENERIC;
      }
 +#endif
  
      if (ret != _Z_RES_OK) {
-         close(_z_lwip_socket_get(*sock));
-@@ -202,6 +225,7 @@ static z_result_t _z_tcp_lwip_accept(const _z_sys_net_socket_t *sock_in, _z_sys_
+-        close(_z_lwip_socket_get(*sock));
++	 lwip_close(_z_lwip_socket_get(*sock));
+         _z_lwip_socket_set(sock, -1);
+         return ret;
+     }
+@@ -168,7 +192,7 @@ static z_result_t _z_tcp_lwip_listen(_z_sys_net_socket_t *sock, const _z_sys_net
+     }
+ 
+     if (ret != _Z_RES_OK) {
+-        close(_z_lwip_socket_get(*sock));
++	 lwip_close(_z_lwip_socket_get(*sock));
+         _z_lwip_socket_set(sock, -1);
+     }
+     return ret;
+@@ -202,6 +226,7 @@ static z_result_t _z_tcp_lwip_accept(const _z_sys_net_socket_t *sock_in, _z_sys_
          _Z_ERROR_RETURN(_Z_ERR_GENERIC);
      }
  #endif
@@ -124,7 +147,7 @@ index ea15a7bb..5bd15dde 100644
      struct linger ling;
      ling.l_onoff = 1;
      ling.l_linger = Z_TRANSPORT_LEASE / 1000;
-@@ -209,6 +233,7 @@ static z_result_t _z_tcp_lwip_accept(const _z_sys_net_socket_t *sock_in, _z_sys_
+@@ -209,6 +234,7 @@ static z_result_t _z_tcp_lwip_accept(const _z_sys_net_socket_t *sock_in, _z_sys_
          lwip_close(con_socket);
          _Z_ERROR_RETURN(_Z_ERR_GENERIC);
      }
@@ -132,6 +155,17 @@ index ea15a7bb..5bd15dde 100644
  
      _z_lwip_socket_set(sock_out, con_socket);
      return _Z_RES_OK;
+@@ -216,8 +242,8 @@ static z_result_t _z_tcp_lwip_accept(const _z_sys_net_socket_t *sock_in, _z_sys_
+ 
+ static void _z_tcp_lwip_close(_z_sys_net_socket_t *sock) {
+     if (_z_lwip_socket_get(*sock) >= 0) {
+-        shutdown(_z_lwip_socket_get(*sock), SHUT_RDWR);
+-        close(_z_lwip_socket_get(*sock));
++        lwip_shutdown(_z_lwip_socket_get(*sock), SHUT_RDWR);
++        lwip_close(_z_lwip_socket_get(*sock));
+         _z_lwip_socket_set(sock, -1);
+     }
+ }
 diff --git a/src/runtime/background_executor.c b/src/runtime/background_executor.c
 index 08378776..085dc563 100644
 --- a/src/runtime/background_executor.c
